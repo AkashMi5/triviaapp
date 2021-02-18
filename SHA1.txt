@@ -1,0 +1,6 @@
+Trivia App:
+
+You uploaded an APK that is not signed with the upload certificate. You must use the same certificate. The upload certificate has fingerprint:
+SHA1: F6:6D:4B:0D:BB:6E:A5:61:46:E5:B7:DA:39:C0:88:44:C8:BF:52:2F
+and the certificate used to sign the APK you uploaded has fingerprint:
+SHA1: 33:D4:58:94:82:96:C5:89:AD:88:68:03:B8:6B:74:C9:6A:0A:C3:E2
