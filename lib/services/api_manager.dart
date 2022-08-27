@@ -20,7 +20,7 @@ class API_Manager {
 
     var candidateData;
     try {
-      final adduser_response = await http.post(_baseUrl + 'add_user', body: {'username': username, 'deviceid' : deviceid}).timeout(Duration(seconds: 10));
+      final adduser_response = await http.post(Uri.parse(_baseUrl + 'add_user'), body: {'username': username, 'deviceid' : deviceid}).timeout(Duration(seconds: 10));
 
       print("In try block");
 
@@ -84,7 +84,7 @@ class API_Manager {
   Future<dynamic> getUsernames() async {
 
     try {
-      final username_response = await http.get(_baseUrl + 'getusernames').timeout(Duration(seconds: 10));
+      final username_response = await http.get(Uri.parse(_baseUrl + 'getusernames')).timeout(Duration(seconds: 10));
 
       if(username_response.statusCode == 200){
 
@@ -140,7 +140,7 @@ class API_Manager {
 
     try {
 
-      final categorylist_response = await http.get(_baseUrl + 'category_list').timeout(Duration(seconds: 10));
+      final categorylist_response = await http.get(Uri.parse(_baseUrl + 'category_list')).timeout(Duration(seconds: 10));
 
       if(categorylist_response.statusCode == 200){
 
@@ -207,7 +207,7 @@ class API_Manager {
     try {
 
       print('User and cat id: $userId $catId');
-      final question_response = await http.post(_baseUrl + 'get_questions', body: {'user_id' : userId, 'category_id' : catId}).timeout(Duration(seconds: 10)) ;
+      final question_response = await http.post(Uri.parse(_baseUrl + 'get_questions'), body: {'user_id' : userId, 'category_id' : catId}).timeout(Duration(seconds: 10)) ;
 
       print('Are we here?');
 
@@ -268,7 +268,7 @@ class API_Manager {
     try
     {
 
-      final gamedata_response  = await http.post( _baseUrl + 'submit_game', body: {'user_id' : userId, 'coins' : coins, 'exp_points' : expp, 'correct' : correct,
+      final gamedata_response  = await http.post(Uri.parse(_baseUrl + 'submit_game'), body: {'user_id' : userId, 'coins' : coins, 'exp_points' : expp, 'correct' : correct,
                                 'attempted' : attempted, 'gametype' : gametype} ) ;
 
       if(gamedata_response.statusCode == 200){
@@ -317,7 +317,7 @@ class API_Manager {
 
     try {
 
-      var rank_response = await http.get(_baseUrl + 'get_rank?user_id=' + userId);
+      var rank_response = await http.get(Uri.parse(_baseUrl + 'get_rank?user_id=' + userId));
 
       if(rank_response.statusCode == 200){
 
