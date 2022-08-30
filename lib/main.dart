@@ -1,17 +1,28 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:trivia_fun/services/api_manager.dart' ;
-import 'package:trivia_fun/models/user_login.dart' ;
-import 'package:progress_dialog/progress_dialog.dart' ;
+import 'package:trivia_fun/services/api_manager.dart';
+import 'package:trivia_fun/models/user_login.dart';
+import 'package:progress_dialog/progress_dialog.dart';
 import 'package:device_info/device_info.dart';
 import 'dart:io';
-import 'package:trivia_fun/utils/sharedpreferences_helper.dart' ;
+import 'package:trivia_fun/utils/sharedpreferences_helper.dart';
 import 'package:flutter/foundation.dart';
-import 'package:trivia_fun/screens/dashboard.dart' ;
-import 'package:trivia_fun/mywidgets/polkadots_canvas.dart' ;
+import 'package:trivia_fun/screens/dashboard.dart';
+import 'package:trivia_fun/mywidgets/polkadots_canvas.dart';
+import 'package:trivia_fun/services/push_notification_service.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
-void main() {
+Future<void> backgroundHandler(RemoteMessage message) async {
+  print(message.data.toString());
+  print(message.notification.title);
+}
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  FirebaseMessaging.onBackgroundMessage(backgroundHandler);
   runApp(MyApp());
 }
 
@@ -39,35 +50,37 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
-  TextEditingController _usernameController = TextEditingController() ;
-  String _username ;
+  TextEditingController _usernameController = TextEditingController();
+  String _username;
   bool visibilityOb = true;
   Color color1 = Color(0XFF015DEA);
   Color color2 = Color(0XFF01C4FA);
-  API_Manager apiM = API_Manager() ;
+  API_Manager apiM = API_Manager();
   List<UserLogin> _userList = [];
   List<String> _allUserNames = [];
-  ProgressDialog pr ;
-  String _errorMssg = '' ;
-  bool _isError  = false ;
+  ProgressDialog pr;
+  String _errorMssg = '';
+  bool _isError = false;
   final DeviceInfoPlugin deviceInfoPlugin = new DeviceInfoPlugin();
-  String deviceName = '' ;
-  String deviceVersion = '' ;
-  String identifier = '' ;
+  String deviceName = '';
+  String deviceVersion = '';
+  String identifier = '';
   String _dialogTitle = 'Alert';
   String _dialogDesc = 'Username already exists, try with other one!';
   String _dialogButtonText = 'Okay';
-
+  PushNotificationService pushNotificationService;
 
   @override
   void initState() {
+    initPlatformState();
 
-    initPlatformState() ;
+    pushNotificationService = PushNotificationService();
 
-    isLogin() ;
+    pushNotificationService.firbaseInitialize();
 
-   /* _usernameController.addListener(() {
+    isLogin();
+
+    /* _usernameController.addListener(() {
       setState(() {
         if (_usernameController.text.length < 5  || _allUserNames.contains(_usernameController.text.toLowerCase())) {                                   // || _allUserNames.contains(_usernameController.text.toLowerCase())
 
@@ -84,21 +97,19 @@ class _MyHomePageState extends State<MyHomePage> {
     });*/
     super.initState();
 
-   /* WidgetsBinding.instance
+    /* WidgetsBinding.instance
         .addPostFrameCallback((_) =>  getUsernameData());*/
-
   }
 
   isLogin() async {
+    bool userIdExists = await SharedpreferencesHelper.checkUserIdKey();
 
-    bool userIdExists = await SharedpreferencesHelper.checkUserIdKey() ;
-
-    if(userIdExists){
+    if (userIdExists) {
       String uid = await SharedpreferencesHelper.getUserId();
 
-      print("User id is " + uid) ;
+      print("User id is " + uid);
 
-      if(uid != null || uid != ''){
+      if (uid != null || uid != '') {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute<void>(
             builder: (BuildContext context) {
@@ -108,20 +119,17 @@ class _MyHomePageState extends State<MyHomePage> {
         );
       }
     }
-
   }
 
   _showDialog() {
     // return object of type Dialog
     return showDialog(
       context: context,
-      builder: (BuildContext context) =>
-          CustomDialog(
-            title: "$_dialogTitle",
-            description:
-            "$_dialogDesc",
-            buttonText: "$_dialogButtonText",
-          ),
+      builder: (BuildContext context) => CustomDialog(
+        title: "$_dialogTitle",
+        description: "$_dialogDesc",
+        buttonText: "$_dialogButtonText",
+      ),
     );
   }
 
@@ -133,11 +141,10 @@ class _MyHomePageState extends State<MyHomePage> {
         var build = await deviceInfoPlugin.androidInfo;
         deviceName = build.model;
         deviceVersion = build.version.toString();
-        identifier = build.androidId;  //UUID for Android
+        identifier = build.androidId; //UUID for Android
         SharedpreferencesHelper.setDeviceId(identifier);
 
         print('Device ID: $identifier');
-
       } else if (Platform.isIOS) {
         // todo
       }
@@ -151,14 +158,15 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   getUsernameData() async {
-
-    pr = ProgressDialog(context,type: ProgressDialogType.Normal, isDismissible: false, showLogs: true);
+    pr = ProgressDialog(context,
+        type: ProgressDialogType.Normal, isDismissible: false, showLogs: true);
     pr.style(
         message: 'Getting data..',
         borderRadius: 10.0,
         backgroundColor: Colors.white,
         progressWidget: Container(
-          child: Image.asset('images/double_ring_loading_io.gif'), // Image.asset('images/1_florian-7gif.gif'),
+          child: Image.asset(
+              'images/double_ring_loading_io.gif'), // Image.asset('images/1_florian-7gif.gif'),
         ),
         elevation: 10.0,
         insetAnimCurve: Curves.easeInOut,
@@ -167,123 +175,113 @@ class _MyHomePageState extends State<MyHomePage> {
         progressTextStyle: TextStyle(
             color: Colors.black, fontSize: 13.0, fontWeight: FontWeight.w400),
         messageTextStyle: TextStyle(
-            color: Colors.black, fontSize: 19.0, fontWeight: FontWeight.w600)
-    );
+            color: Colors.black, fontSize: 19.0, fontWeight: FontWeight.w600));
     await pr.show();
-     var uResposne = await apiM.getUsernames();
+    var uResposne = await apiM.getUsernames();
 
-     if(uResposne is List<UserLogin>){
-       print("Username List being fetched") ;
-       pr.hide().then((isHidden) {
-         print(isHidden);
-       });
-
-       _userList = uResposne ;
-
-        for(int i = 0; i < _userList.length; i++){
-            _allUserNames.add(_userList[i].username.toLowerCase());
-            print(_userList[i].username);
-        }
-     }
-     else if(uResposne is Exception) {
-       print("Exception thrown") ;
-       pr.hide().then((isHidden) {
-         print(isHidden);
-       });
-
-       _errorMssg = uResposne.toString() ;
-       print(uResposne);
-       _isError = true;
-
-     }
-
-     else {
-       print("Some error occured") ;
-       pr.hide().then((isHidden) {
-         print(isHidden);
-       });
-
-       print(uResposne.toString());
-
-     }
-
-  }
-
-  addUserName() async {
-    String username = _usernameController.text ;
-
-    pr = ProgressDialog(context,type: ProgressDialogType.Normal, isDismissible: false, showLogs: true);
-    pr.style(
-        message: 'Getting data..',
-        borderRadius: 10.0,
-        backgroundColor: Colors.white,
-        progressWidget: Container(
-          child: Image.asset('images/double_ring_loading_io.gif'), // Image.asset('images/1_florian-7gif.gif'),
-        ),
-        elevation: 10.0,
-        insetAnimCurve: Curves.easeInOut,
-        progress: 0.0,
-        maxProgress: 100.0,
-        progressTextStyle: TextStyle(
-            color: Colors.black, fontSize: 13.0, fontWeight: FontWeight.w400),
-        messageTextStyle: TextStyle(
-            color: Colors.black, fontSize: 19.0, fontWeight: FontWeight.w600)
-    );
-    await pr.show();
-    var uResposne = await apiM.addUser(username, identifier);
-
-    if(uResposne is UserLogin){
-
+    if (uResposne is List<UserLogin>) {
+      print("Username List being fetched");
       pr.hide().then((isHidden) {
         print(isHidden);
       });
 
-      UserLogin _userdata = uResposne ;
+      _userList = uResposne;
 
-      String _userId = _userdata.userId ;
-      String _coins = _userdata.coins ;
-      String _expp = _userdata.expPoints ;
-      int _attempted = int.parse(_userdata.attempted) ;
-      int _correct = int.parse(_userdata.correct) ;
+      for (int i = 0; i < _userList.length; i++) {
+        _allUserNames.add(_userList[i].username.toLowerCase());
+        print(_userList[i].username);
+      }
+    } else if (uResposne is Exception) {
+      print("Exception thrown");
+      pr.hide().then((isHidden) {
+        print(isHidden);
+      });
+
+      _errorMssg = uResposne.toString();
+      print(uResposne);
+      _isError = true;
+    } else {
+      print("Some error occured");
+      pr.hide().then((isHidden) {
+        print(isHidden);
+      });
+
+      print(uResposne.toString());
+    }
+  }
+
+  addUserName() async {
+    String username = _usernameController.text;
+
+    pr = ProgressDialog(context,
+        type: ProgressDialogType.Normal, isDismissible: false, showLogs: true);
+    pr.style(
+        message: 'Getting data..',
+        borderRadius: 10.0,
+        backgroundColor: Colors.white,
+        progressWidget: Container(
+          child: Image.asset(
+              'images/double_ring_loading_io.gif'), // Image.asset('images/1_florian-7gif.gif'),
+        ),
+        elevation: 10.0,
+        insetAnimCurve: Curves.easeInOut,
+        progress: 0.0,
+        maxProgress: 100.0,
+        progressTextStyle: TextStyle(
+            color: Colors.black, fontSize: 13.0, fontWeight: FontWeight.w400),
+        messageTextStyle: TextStyle(
+            color: Colors.black, fontSize: 19.0, fontWeight: FontWeight.w600));
+    await pr.show();
+    var uResposne = await apiM.addUser(username, identifier);
+
+    if (uResposne is UserLogin) {
+      pr.hide().then((isHidden) {
+        print(isHidden);
+      });
+
+      UserLogin _userdata = uResposne;
+
+      String _userId = _userdata.userId;
+      String _coins = _userdata.coins;
+      String _expp = _userdata.expPoints;
+      int _attempted = int.parse(_userdata.attempted);
+      int _correct = int.parse(_userdata.correct);
       int _subjectGames = int.parse(_userdata.gamesSubjectwise);
-      int _randomGames = int.parse(_userdata.gamesRandom) ;
+      int _randomGames = int.parse(_userdata.gamesRandom);
 
-      String _perc = '' ;
+      String _perc = '';
 
-      if(_attempted == 0){
-        _perc = '0.0' ;
+      if (_attempted == 0) {
+        _perc = '0.0';
+      } else {
+        _perc = ((_correct / _attempted) * 100).toStringAsFixed(1);
       }
 
-      else {
-        _perc = ((_correct/_attempted)*100).toStringAsFixed(1) ;
-      }
+      //   String _perc = _percc.substring(0,4);
 
+      print("This is the percentage: $_perc");
 
-   //   String _perc = _percc.substring(0,4);
+      print("This is the exp points: $_expp");
 
-      print("This is the percentage: $_perc") ;
-
-      print("This is the exp points: $_expp") ;
-
-      await SharedpreferencesHelper.setUserId(_userId) ;
+      await SharedpreferencesHelper.setUserId(_userId);
 
       await SharedpreferencesHelper.setUserName(_userdata.username);
 
       await SharedpreferencesHelper.setCoins(_coins);
 
-      await SharedpreferencesHelper.setExppoints(_expp) ;
+      await SharedpreferencesHelper.setExppoints(_expp);
 
       await SharedpreferencesHelper.setPercentage(_perc);
 
-      await  SharedpreferencesHelper.setSubjectwiseGames(_subjectGames.toString());
+      await SharedpreferencesHelper.setSubjectwiseGames(
+          _subjectGames.toString());
 
-      await SharedpreferencesHelper.setRandomGames(_randomGames.toString()) ;
+      await SharedpreferencesHelper.setRandomGames(_randomGames.toString());
 
-      await SharedpreferencesHelper.setCumulativeScore(_userdata.cumulativePoints) ;
+      await SharedpreferencesHelper.setCumulativeScore(
+          _userdata.cumulativePoints);
 
-      await SharedpreferencesHelper.setProfilePic('') ;
-
-
+      await SharedpreferencesHelper.setProfilePic('');
 
       print(_userdata.username);
 
@@ -294,52 +292,39 @@ class _MyHomePageState extends State<MyHomePage> {
           },
         ),
       );
-
-    }
-
-    else if(uResposne is String){
+    } else if (uResposne is String) {
       pr.hide().then((isHidden) {
         print(isHidden);
       });
-      if(uResposne == 'Username taken by someone else'){
+      if (uResposne == 'Username taken by someone else') {
         print('Username taken by someone else');
         _showDialog();
+      } else {
+        print("Some error occurred");
       }
-        else {
-          print("Some error occurred");
-      }
-
-    }
-
-    else if(uResposne is Exception){
-      print("Exception thrown") ;
+    } else if (uResposne is Exception) {
+      print("Exception thrown");
       pr.hide().then((isHidden) {
         print(isHidden);
       });
 
-      _errorMssg = uResposne.toString() ;
+      _errorMssg = uResposne.toString();
       print(uResposne);
       _isError = true;
-    }
-
-    else {
-      print("Some error occured") ;
+    } else {
+      print("Some error occured");
       pr.hide().then((isHidden) {
         print(isHidden);
       });
 
       print(uResposne.toString());
     }
-
-
   }
-
 
   @override
   Widget build(BuildContext context) {
-
-    double cheight = MediaQuery.of(context).size.height ;
-    double cwidth = MediaQuery.of(context).size.width ;
+    double cheight = MediaQuery.of(context).size.height;
+    double cwidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -358,7 +343,6 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-
                 Padding(
                   padding: const EdgeInsets.only(top: 36.0),
                   child: Text(
@@ -366,12 +350,9 @@ class _MyHomePageState extends State<MyHomePage> {
                     style: TextStyle(
                         fontSize: 32,
                         color: Colors.white,
-                        fontFamily: 'Poweto'
-                    ),
+                        fontFamily: 'Poweto'),
                   ),
                 ),
-
-
                 Column(
                   children: <Widget>[
                     Text(
@@ -379,21 +360,17 @@ class _MyHomePageState extends State<MyHomePage> {
                       style: TextStyle(
                           fontSize: 24,
                           color: Colors.white,
-                          fontFamily: 'Poweto'
-                      ),
+                          fontFamily: 'Poweto'),
                     ),
-
-                      SizedBox(height: 16),
-
+                    SizedBox(height: 16),
                     Container(
-                      padding: EdgeInsets.only(left: 15, top: 10, right: 10, bottom: 10),
-                      width: cwidth*0.9,
+                      padding: EdgeInsets.only(
+                          left: 15, top: 10, right: 10, bottom: 10),
+                      width: cwidth * 0.9,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.all(Radius.circular(16)),
-                        border: Border.all(
-                            color: Colors.lightBlueAccent,
-                            width: 2
-                        ),
+                        border:
+                            Border.all(color: Colors.lightBlueAccent, width: 2),
                       ),
                       child: Row(
                         children: <Widget>[
@@ -404,17 +381,15 @@ class _MyHomePageState extends State<MyHomePage> {
                               style: new TextStyle(
                                   color: Colors.white,
                                   fontFamily: 'GilroySemiBold',
-                                  fontSize: 18.0
-                              ),
+                                  fontSize: 18.0),
                               controller: _usernameController,
                               //  validator: (val) => isPhoneNumberValid(val) ? null : null,
                               onSubmitted: (val) => _username = val,
                               obscureText: false,
                               decoration: InputDecoration.collapsed(
                                   hintText: "Username",
-                                  hintStyle:TextStyle(
+                                  hintStyle: TextStyle(
                                       fontFamily: 'GilroySemiBold',
-
                                       color: Colors.white,
                                       fontWeight: FontWeight.normal,
                                       fontSize: 18)),
@@ -425,37 +400,33 @@ class _MyHomePageState extends State<MyHomePage> {
                           ),
                           visibilityOb
                               ? Container(
-                            width: 5,
-                          ) : Icon(
-                            Icons.check_circle,
-                            size: 22,
-                            color: Color(0XFF7EE8A9),                          //Color(0XFF7EE8A9),
-                          ),
+                                  width: 5,
+                                )
+                              : Icon(
+                                  Icons.check_circle,
+                                  size: 22,
+                                  color: Color(0XFF7EE8A9), //Color(0XFF7EE8A9),
+                                ),
                         ],
-
                       ),
                     ),
-
                     SizedBox(height: 6),
-
                     Text(
                       "*Username will work on this device only",
                       style: TextStyle(
                           fontSize: 16,
                           color: Colors.white,
-                          fontFamily: 'Poweto'
-                      ),
+                          fontFamily: 'Poweto'),
                     ),
-
                     SizedBox(height: 24),
-
                     Material(
                       color: Colors.white.withOpacity(0.0),
                       child: Container(
                         margin: const EdgeInsets.only(top: 10.0),
                         decoration: BoxDecoration(
                             gradient: LinearGradient(
-                                end: Alignment.topLeft, begin: Alignment.topRight,
+                                end: Alignment.topLeft,
+                                begin: Alignment.topRight,
                                 colors: [color1, color2]),
                             borderRadius: new BorderRadius.only(
                               topLeft: const Radius.circular(30.0),
@@ -464,44 +435,40 @@ class _MyHomePageState extends State<MyHomePage> {
                               bottomRight: const Radius.circular(30.0),
                             )),
                         child: MaterialButton(
-                          minWidth: cwidth*0.5,
+                          minWidth: cwidth * 0.5,
                           padding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
                           onPressed: () {
-                            visibilityOb ? addUserName() : null ;
+                            visibilityOb ? addUserName() : null;
                           },
                           child: Text("You're welcome",
                               textAlign: TextAlign.center,
-                              style:TextStyle(
+                              style: TextStyle(
                                   fontFamily: 'GilroySemiBold',
                                   fontSize: 18,
-                                  color: Colors.white, fontWeight: FontWeight.normal)),
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.normal)),
                         ),
                       ),
                     )
                   ],
                 ),
-
-
                 InkWell(
-                  onTap: (){
-                   /* Navigator.of(context).push(
+                    onTap: () {
+                      /* Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (BuildContext context) {
                           return Dashboard();
                         },
                       ),
                     );*/
-                  } ,
+                    },
                     child: Container(
-                      height: cheight*0.2,
-                        child: PolkadotsCanvas()
-                    )
-                )
+                        height: cheight * 0.2, child: PolkadotsCanvas()))
               ],
             ),
           ),
         ),
-      ),// This trailing comma makes auto-formatting nicer for build methods.
+      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
@@ -510,14 +477,12 @@ class CustomDialog extends StatelessWidget {
   final String title, description, buttonText;
   final Image image;
 
-
   CustomDialog({
     @required this.title,
     @required this.description,
     @required this.buttonText,
     this.image,
   });
-
 
   @override
   Widget build(BuildContext context) {
@@ -531,13 +496,12 @@ class CustomDialog extends StatelessWidget {
     );
   }
 
-
   dialogContent(BuildContext context) {
     return Stack(
       children: <Widget>[
-        Container (
+        Container(
           padding: EdgeInsets.only(
-            top:  Consts.padding,
+            top: Consts.padding,
             bottom: Consts.padding,
             left: Consts.padding,
             right: Consts.padding,
@@ -584,11 +548,7 @@ class CustomDialog extends StatelessWidget {
                       onPressed: () {
                         Navigator.of(context).pop(); // To close the dialog
                       },
-                      child: Text("Ok",
-                        style: TextStyle(
-                          color: Colors.white
-                        )
-                        ),
+                      child: Text("Ok", style: TextStyle(color: Colors.white)),
                     ),
                   ],
                 ),
@@ -597,9 +557,7 @@ class CustomDialog extends StatelessWidget {
           ),
         ),
 
-
-
-     /*   Positioned(
+        /*   Positioned(
           left: 1,
           right:1,
           child: CircleAvatar(
@@ -612,14 +570,9 @@ class CustomDialog extends StatelessWidget {
             radius: Consts.avatarRadius,
           ),
         ),*/
-
-
       ],
     );
   }
-
-
-
 }
 
 class Consts {
@@ -628,5 +581,3 @@ class Consts {
   static const double padding = 20.0;
   static const double avatarRadius = 40.0;
 }
-
-
