@@ -1,4 +1,5 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:trivia_fun/services/local_notification_service.dart';
 
 class PushNotificationService {
   void firbaseInitialize() {
@@ -31,8 +32,7 @@ class PushNotificationService {
           print(message.notification.title);
           print(message.notification.body);
           print("message.data11 ${message.data}");
-          // LocalNotificationService.display(message);
-
+          LocalNotificationService.createanddisplaynotification(message);
         }
       },
     );

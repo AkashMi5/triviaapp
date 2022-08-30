@@ -1,13 +1,12 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:trivia_fun/services/api_manager.dart';
 import 'package:trivia_fun/models/user_login.dart';
 import 'package:progress_dialog/progress_dialog.dart';
 import 'package:device_info/device_info.dart';
+import 'package:trivia_fun/services/local_notification_service.dart';
 import 'dart:io';
 import 'package:trivia_fun/utils/sharedpreferences_helper.dart';
-import 'package:flutter/foundation.dart';
 import 'package:trivia_fun/screens/dashboard.dart';
 import 'package:trivia_fun/mywidgets/polkadots_canvas.dart';
 import 'package:trivia_fun/services/push_notification_service.dart';
@@ -23,6 +22,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   FirebaseMessaging.onBackgroundMessage(backgroundHandler);
+  LocalNotificationService.initialize();
   runApp(MyApp());
 }
 
