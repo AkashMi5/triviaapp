@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:trivia_fun/routes.dart';
 import 'package:trivia_fun/services/api_manager.dart';
 import 'package:trivia_fun/models/user_login.dart';
 import 'package:progress_dialog/progress_dialog.dart';
@@ -14,44 +13,14 @@ import 'package:trivia_fun/services/push_notification_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
-Future<void> backgroundHandler(RemoteMessage message) async {
-  print(message.data.toString());
-  print(message.notification.title);
-}
-
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  FirebaseMessaging.onBackgroundMessage(backgroundHandler);
-  LocalNotificationService.initialize();
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-//      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      initialRoute: Routes.splash,
-      onGenerateRoute: Routes.generateRoute,
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, Key key2}) : super(key: key);
+class LoginView extends StatefulWidget {
+  const LoginView({Key key}) : super(key: key);
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  State<LoginView> createState() => _LoginViewState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _LoginViewState extends State<LoginView> {
   TextEditingController _usernameController = TextEditingController();
   String _username;
   bool visibilityOb = true;
@@ -74,14 +43,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    initPlatformState();
-
-    pushNotificationService = PushNotificationService();
-
-    pushNotificationService.firbaseInitialize();
-
-    isLogin();
-
     /* _usernameController.addListener(() {
       setState(() {
         if (_usernameController.text.length < 5  || _allUserNames.contains(_usernameController.text.toLowerCase())) {                                   // || _allUserNames.contains(_usernameController.text.toLowerCase())
@@ -101,115 +62,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
     /* WidgetsBinding.instance
         .addPostFrameCallback((_) =>  getUsernameData());*/
-  }
-
-  isLogin() async {
-    bool userIdExists = await SharedpreferencesHelper.checkUserIdKey();
-
-    if (userIdExists) {
-      String uid = await SharedpreferencesHelper.getUserId();
-
-      print("User id is " + uid);
-
-      if (uid != null || uid != '') {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute<void>(
-            builder: (BuildContext context) {
-              return Dashboard();
-            },
-          ),
-        );
-      }
-    }
-  }
-
-  _showDialog() {
-    // return object of type Dialog
-    return showDialog(
-      context: context,
-      builder: (BuildContext context) => CustomDialog(
-        title: "$_dialogTitle",
-        description: "$_dialogDesc",
-        buttonText: "$_dialogButtonText",
-      ),
-    );
-  }
-
-  Future<void> initPlatformState() async {
-    Map<String, dynamic> deviceData;
-
-    try {
-      if (Platform.isAndroid) {
-        var build = await deviceInfoPlugin.androidInfo;
-        deviceName = build.model;
-        deviceVersion = build.version.toString();
-        identifier = build.androidId; //UUID for Android
-        SharedpreferencesHelper.setDeviceId(identifier);
-
-        print('Device ID: $identifier');
-      } else if (Platform.isIOS) {
-        // todo
-      }
-    } on PlatformException {
-      deviceData = <String, dynamic>{
-        'Error:': 'Failed to get platform version.'
-      };
-    }
-
-    if (!mounted) return;
-  }
-
-  getUsernameData() async {
-    pr = ProgressDialog(context,
-        type: ProgressDialogType.Normal, isDismissible: false, showLogs: true);
-    pr.style(
-        message: 'Getting data..',
-        borderRadius: 10.0,
-        backgroundColor: Colors.white,
-        progressWidget: Container(
-          child: Image.asset(
-              'images/double_ring_loading_io.gif'), // Image.asset('images/1_florian-7gif.gif'),
-        ),
-        elevation: 10.0,
-        insetAnimCurve: Curves.easeInOut,
-        progress: 0.0,
-        maxProgress: 100.0,
-        progressTextStyle: TextStyle(
-            color: Colors.black, fontSize: 13.0, fontWeight: FontWeight.w400),
-        messageTextStyle: TextStyle(
-            color: Colors.black, fontSize: 19.0, fontWeight: FontWeight.w600));
-    await pr.show();
-    var uResposne = await apiM.getUsernames();
-
-    if (uResposne is List<UserLogin>) {
-      print("Username List being fetched");
-      pr.hide().then((isHidden) {
-        print(isHidden);
-      });
-
-      _userList = uResposne;
-
-      for (int i = 0; i < _userList.length; i++) {
-        _allUserNames.add(_userList[i].username.toLowerCase());
-        print(_userList[i].username);
-      }
-    } else if (uResposne is Exception) {
-      print("Exception thrown");
-      pr.hide().then((isHidden) {
-        print(isHidden);
-      });
-
-      _errorMssg = uResposne.toString();
-      print(uResposne);
-      _isError = true;
-    } else {
-      print("Some error occured");
-      pr.hide().then((isHidden) {
-        print(isHidden);
-      });
-
-      print(uResposne.toString());
-    }
   }
 
   addUserName() async {
@@ -321,6 +173,18 @@ class _MyHomePageState extends State<MyHomePage> {
 
       print(uResposne.toString());
     }
+  }
+
+  _showDialog() {
+    // return object of type Dialog
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) => CustomDialog(
+        title: "$_dialogTitle",
+        description: "$_dialogDesc",
+        buttonText: "$_dialogButtonText",
+      ),
+    );
   }
 
   @override
