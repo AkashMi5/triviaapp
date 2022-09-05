@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:trivia_fun/routes.dart';
-import 'package:trivia_fun/screens/dashboard.dart';
-import 'package:trivia_fun/screens/login/view/login_view.dart';
 import 'package:trivia_fun/screens/splash/bloc/splash_bloc.dart';
 import 'package:trivia_fun/screens/splash/bloc/splash_event.dart';
 import 'package:trivia_fun/screens/splash/bloc/splash_state.dart';
@@ -50,7 +48,6 @@ class _SplashViewState extends State<SplashView> {
                     Navigator.of(context).pushNamed(Routes.login);
                   }
                 } else if (state is SplashErrorState) {
-                  debugPrint('Inside listener');
                   UtilityWidgets.showSnackBar(context, state.errorMessage);
                 }
               },

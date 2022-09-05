@@ -1,19 +1,38 @@
-import 'dart:html';
-import 'dart:io';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 
 abstract class LoginEvent extends Equatable {}
 
-class CheckLoginStatusEvent extends LoginEvent {
-  CheckLoginStatusEvent();
+class LoginLoadingEvent extends LoginEvent {
+  LoginLoadingEvent();
 
   @override
   List<Object> get props => [];
 }
 
-class UserLoginEvent extends LoginEvent {
-  UserLoginEvent();
+class LoginUserNameTypingEvent extends LoginEvent {
+  LoginUserNameTypingEvent({@required this.userName});
+
+  final String userName;
 
   @override
-  List<Object> get props => [];
+  List<Object> get props => [userName];
+}
+
+class UserNameSubmitEvent extends LoginEvent {
+  UserNameSubmitEvent({@required this.userName});
+
+  final String userName;
+
+  @override
+  List<Object> get props => [userName];
+}
+
+class LoginErrorEvent extends LoginEvent {
+  LoginErrorEvent({@required this.errorMessage});
+
+  final String errorMessage;
+
+  @override
+  List<Object> get props => [errorMessage];
 }

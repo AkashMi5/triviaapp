@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:trivia_fun/mywidgets/utility_widgets.dart';
+import 'package:trivia_fun/routes.dart';
+import 'package:trivia_fun/screens/login/bloc/login_bloc.dart';
+import 'package:trivia_fun/screens/login/bloc/login_event.dart';
+import 'package:trivia_fun/screens/login/bloc/login_state.dart';
 import 'package:trivia_fun/services/api_manager.dart';
-import 'package:trivia_fun/models/user_login.dart';
-import 'package:progress_dialog/progress_dialog.dart';
-import 'package:device_info/device_info.dart';
-import 'package:trivia_fun/services/local_notification_service.dart';
-import 'dart:io';
-import 'package:trivia_fun/utils/sharedpreferences_helper.dart';
-import 'package:trivia_fun/screens/dashboard.dart';
 import 'package:trivia_fun/mywidgets/polkadots_canvas.dart';
 import 'package:trivia_fun/services/push_notification_service.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({Key key}) : super(key: key);
@@ -22,27 +18,18 @@ class LoginView extends StatefulWidget {
 
 class _LoginViewState extends State<LoginView> {
   TextEditingController _usernameController = TextEditingController();
-  String _username;
   bool visibilityOb = true;
   Color color1 = Color(0XFF015DEA);
   Color color2 = Color(0XFF01C4FA);
-  API_Manager apiM = API_Manager();
-  List<UserLogin> _userList = [];
-  List<String> _allUserNames = [];
-  ProgressDialog pr;
-  String _errorMssg = '';
-  bool _isError = false;
-  final DeviceInfoPlugin deviceInfoPlugin = new DeviceInfoPlugin();
-  String deviceName = '';
-  String deviceVersion = '';
-  String identifier = '';
   String _dialogTitle = 'Alert';
   String _dialogDesc = 'Username already exists, try with other one!';
   String _dialogButtonText = 'Okay';
-  PushNotificationService pushNotificationService;
+  LoginBloc _loginBloc;
 
   @override
   void initState() {
+    _loginBloc = LoginBloc();
+    _usernameController.text = '';
     /* _usernameController.addListener(() {
       setState(() {
         if (_usernameController.text.length < 5  || _allUserNames.contains(_usernameController.text.toLowerCase())) {                                   // || _allUserNames.contains(_usernameController.text.toLowerCase())
@@ -64,115 +51,11 @@ class _LoginViewState extends State<LoginView> {
         .addPostFrameCallback((_) =>  getUsernameData());*/
   }
 
-  addUserName() async {
-    String username = _usernameController.text;
-
-    pr = ProgressDialog(context,
-        type: ProgressDialogType.Normal, isDismissible: false, showLogs: true);
-    pr.style(
-        message: 'Getting data..',
-        borderRadius: 10.0,
-        backgroundColor: Colors.white,
-        progressWidget: Container(
-          child: Image.asset(
-              'images/double_ring_loading_io.gif'), // Image.asset('images/1_florian-7gif.gif'),
-        ),
-        elevation: 10.0,
-        insetAnimCurve: Curves.easeInOut,
-        progress: 0.0,
-        maxProgress: 100.0,
-        progressTextStyle: TextStyle(
-            color: Colors.black, fontSize: 13.0, fontWeight: FontWeight.w400),
-        messageTextStyle: TextStyle(
-            color: Colors.black, fontSize: 19.0, fontWeight: FontWeight.w600));
-    await pr.show();
-    var uResposne = await apiM.addUser(username, identifier);
-
-    if (uResposne is UserLogin) {
-      pr.hide().then((isHidden) {
-        print(isHidden);
-      });
-
-      UserLogin _userdata = uResposne;
-
-      String _userId = _userdata.userId;
-      String _coins = _userdata.coins;
-      String _expp = _userdata.expPoints;
-      int _attempted = int.parse(_userdata.attempted);
-      int _correct = int.parse(_userdata.correct);
-      int _subjectGames = int.parse(_userdata.gamesSubjectwise);
-      int _randomGames = int.parse(_userdata.gamesRandom);
-
-      String _perc = '';
-
-      if (_attempted == 0) {
-        _perc = '0.0';
-      } else {
-        _perc = ((_correct / _attempted) * 100).toStringAsFixed(1);
-      }
-
-      //   String _perc = _percc.substring(0,4);
-
-      print("This is the percentage: $_perc");
-
-      print("This is the exp points: $_expp");
-
-      await SharedpreferencesHelper.setUserId(_userId);
-
-      await SharedpreferencesHelper.setUserName(_userdata.username);
-
-      await SharedpreferencesHelper.setCoins(_coins);
-
-      await SharedpreferencesHelper.setExppoints(_expp);
-
-      await SharedpreferencesHelper.setPercentage(_perc);
-
-      await SharedpreferencesHelper.setSubjectwiseGames(
-          _subjectGames.toString());
-
-      await SharedpreferencesHelper.setRandomGames(_randomGames.toString());
-
-      await SharedpreferencesHelper.setCumulativeScore(
-          _userdata.cumulativePoints);
-
-      await SharedpreferencesHelper.setProfilePic('');
-
-      print(_userdata.username);
-
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(
-          builder: (BuildContext context) {
-            return Dashboard();
-          },
-        ),
-      );
-    } else if (uResposne is String) {
-      pr.hide().then((isHidden) {
-        print(isHidden);
-      });
-      if (uResposne == 'Username taken by someone else') {
-        print('Username taken by someone else');
-        _showDialog();
-      } else {
-        print("Some error occurred");
-      }
-    } else if (uResposne is Exception) {
-      print("Exception thrown");
-      pr.hide().then((isHidden) {
-        print(isHidden);
-      });
-
-      _errorMssg = uResposne.toString();
-      print(uResposne);
-      _isError = true;
-    } else {
-      print("Some error occured");
-      pr.hide().then((isHidden) {
-        print(isHidden);
-      });
-
-      print(uResposne.toString());
-    }
+  @override
+  void dispose() {
+    super.dispose();
+    _usernameController.dispose();
+    _loginBloc.close();
   }
 
   _showDialog() {
@@ -192,150 +75,184 @@ class _LoginViewState extends State<LoginView> {
     double cheight = MediaQuery.of(context).size.height;
     double cwidth = MediaQuery.of(context).size.width;
 
-    return Scaffold(
-      body: SingleChildScrollView(
-        child: Container(
-          height: cheight,
-          width: cwidth,
-          color: Color(0xff1D2951),
-          /*decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('images/background1.png'),
-              fit: BoxFit.fill
-            )
-          ),*/
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.only(top: 36.0),
-                  child: Text(
-                    'GK Quiz for bright minds!',
-                    style: TextStyle(
-                        fontSize: 32,
-                        color: Colors.white,
-                        fontFamily: 'Poweto'),
+    return BlocProvider<LoginBloc>(
+        create: (context) => _loginBloc,
+        child: BlocListener<LoginBloc, LoginState>(listener: (context, state) {
+          if (state is LoginErrorState) {
+            UtilityWidgets.showSnackBar(context, state.errorMessage);
+          } else if (state is LoginDataSubmittedState) {
+            if (state.userLogin != null) {
+              Navigator.of(context).pushReplacementNamed(Routes.dashboard);
+            } else if (state.message != null) {
+              if (state.message == 'Username taken by someone else') {
+                _showDialog();
+              } else {
+                UtilityWidgets.showSnackBar(context, state.message);
+              }
+            } else {
+              UtilityWidgets.showSnackBar(context, state.message);
+            }
+          }
+        }, child: BlocBuilder<LoginBloc, LoginState>(
+          builder: (context, state) {
+            return Scaffold(
+              body: SingleChildScrollView(
+                child: Container(
+                  height: cheight,
+                  width: cwidth,
+                  color: Color(0xff1D2951),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.only(top: 36.0),
+                          child: Text(
+                            'GK Quiz for bright minds!',
+                            style: TextStyle(
+                                fontSize: 32,
+                                color: Colors.white,
+                                fontFamily: 'Poweto'),
+                          ),
+                        ),
+                        Column(
+                          children: <Widget>[
+                            Text(
+                              'Sign Up',
+                              style: TextStyle(
+                                  fontSize: 24,
+                                  color: Colors.white,
+                                  fontFamily: 'Poweto'),
+                            ),
+                            SizedBox(height: 16),
+                            Container(
+                              padding: EdgeInsets.only(
+                                  left: 15, top: 10, right: 10, bottom: 10),
+                              width: cwidth * 0.9,
+                              decoration: BoxDecoration(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(16)),
+                                border: Border.all(
+                                    color: Colors.lightBlueAccent, width: 2),
+                              ),
+                              child: Row(
+                                children: <Widget>[
+                                  Expanded(
+                                    child: TextField(
+                                      autofocus: false,
+                                      textAlign: TextAlign.left,
+                                      style: new TextStyle(
+                                          color: Colors.white,
+                                          fontFamily: 'GilroySemiBold',
+                                          fontSize: 18.0),
+                                      controller: _usernameController,
+                                      onChanged: (val) => _usernameController
+                                        ..text = val
+                                        ..selection = TextSelection.collapsed(
+                                            offset: _usernameController
+                                                .text.length),
+                                      //  validator: (val) => isPhoneNumberValid(val) ? null : null,
+                                      obscureText: false,
+                                      decoration: InputDecoration.collapsed(
+                                          hintText: "Username",
+                                          hintStyle: TextStyle(
+                                              fontFamily: 'GilroySemiBold',
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.normal,
+                                              fontSize: 18)),
+                                      keyboardType: TextInputType.text,
+                                      textInputAction: TextInputAction.done,
+                                    ),
+                                    flex: 1,
+                                  ),
+                                  visibilityOb
+                                      ? Container(
+                                          width: 5,
+                                        )
+                                      : Icon(
+                                          Icons.check_circle,
+                                          size: 22,
+                                          color: Color(
+                                              0XFF7EE8A9), //Color(0XFF7EE8A9),
+                                        ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: 6),
+                            Text(
+                              "*Username will work on this device only",
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  fontFamily: 'Poweto'),
+                            ),
+                            SizedBox(height: 24),
+                            Material(
+                              color: Colors.white.withOpacity(0.0),
+                              child: Container(
+                                margin: const EdgeInsets.only(top: 10.0),
+                                decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                        end: Alignment.topLeft,
+                                        begin: Alignment.topRight,
+                                        colors: [color1, color2]),
+                                    borderRadius: new BorderRadius.only(
+                                      topLeft: const Radius.circular(30.0),
+                                      topRight: const Radius.circular(30.0),
+                                      bottomLeft: const Radius.circular(30.0),
+                                      bottomRight: const Radius.circular(30.0),
+                                    )),
+                                child: MaterialButton(
+                                  minWidth: cwidth * 0.5,
+                                  padding: EdgeInsets.fromLTRB(
+                                      20.0, 15.0, 20.0, 15.0),
+                                  onPressed: () {
+                                    _loginBloc
+                                      ..add(UserNameSubmitEvent(
+                                          userName: _usernameController.text));
+                                  },
+                                  child: Text("You're welcome",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          fontFamily: 'GilroySemiBold',
+                                          fontSize: 18,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.normal)),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 20,
+                            ),
+                            if (state is LoginLoadingState)
+                              CircularProgressIndicator(
+                                color: Colors.white70,
+                              ),
+                          ],
+                        ),
+                        InkWell(
+                            onTap: () {
+                              /* Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (BuildContext context) {
+                            return Dashboard();
+                          },
+                        ),
+                      );*/
+                            },
+                            child: Container(
+                                height: cheight * 0.2,
+                                child: PolkadotsCanvas()))
+                      ],
+                    ),
                   ),
                 ),
-                Column(
-                  children: <Widget>[
-                    Text(
-                      'Sign Up',
-                      style: TextStyle(
-                          fontSize: 24,
-                          color: Colors.white,
-                          fontFamily: 'Poweto'),
-                    ),
-                    SizedBox(height: 16),
-                    Container(
-                      padding: EdgeInsets.only(
-                          left: 15, top: 10, right: 10, bottom: 10),
-                      width: cwidth * 0.9,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(16)),
-                        border:
-                            Border.all(color: Colors.lightBlueAccent, width: 2),
-                      ),
-                      child: Row(
-                        children: <Widget>[
-                          Expanded(
-                            child: TextField(
-                              autofocus: false,
-                              textAlign: TextAlign.left,
-                              style: new TextStyle(
-                                  color: Colors.white,
-                                  fontFamily: 'GilroySemiBold',
-                                  fontSize: 18.0),
-                              controller: _usernameController,
-                              //  validator: (val) => isPhoneNumberValid(val) ? null : null,
-                              onSubmitted: (val) => _username = val,
-                              obscureText: false,
-                              decoration: InputDecoration.collapsed(
-                                  hintText: "Username",
-                                  hintStyle: TextStyle(
-                                      fontFamily: 'GilroySemiBold',
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.normal,
-                                      fontSize: 18)),
-                              keyboardType: TextInputType.text,
-                              textInputAction: TextInputAction.done,
-                            ),
-                            flex: 1,
-                          ),
-                          visibilityOb
-                              ? Container(
-                                  width: 5,
-                                )
-                              : Icon(
-                                  Icons.check_circle,
-                                  size: 22,
-                                  color: Color(0XFF7EE8A9), //Color(0XFF7EE8A9),
-                                ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 6),
-                    Text(
-                      "*Username will work on this device only",
-                      style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontFamily: 'Poweto'),
-                    ),
-                    SizedBox(height: 24),
-                    Material(
-                      color: Colors.white.withOpacity(0.0),
-                      child: Container(
-                        margin: const EdgeInsets.only(top: 10.0),
-                        decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                                end: Alignment.topLeft,
-                                begin: Alignment.topRight,
-                                colors: [color1, color2]),
-                            borderRadius: new BorderRadius.only(
-                              topLeft: const Radius.circular(30.0),
-                              topRight: const Radius.circular(30.0),
-                              bottomLeft: const Radius.circular(30.0),
-                              bottomRight: const Radius.circular(30.0),
-                            )),
-                        child: MaterialButton(
-                          minWidth: cwidth * 0.5,
-                          padding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
-                          onPressed: () {
-                            visibilityOb ? addUserName() : null;
-                          },
-                          child: Text("You're welcome",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  fontFamily: 'GilroySemiBold',
-                                  fontSize: 18,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.normal)),
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-                InkWell(
-                    onTap: () {
-                      /* Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (BuildContext context) {
-                          return Dashboard();
-                        },
-                      ),
-                    );*/
-                    },
-                    child: Container(
-                        height: cheight * 0.2, child: PolkadotsCanvas()))
-              ],
-            ),
-          ),
-        ),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
+              ), // This trailing comma makes auto-formatting nicer for build methods.
+            );
+          },
+        )));
   }
 }
 
@@ -417,20 +334,6 @@ class CustomDialog extends StatelessWidget {
             ],
           ),
         ),
-
-        /*   Positioned(
-          left: 1,
-          right:1,
-          child: CircleAvatar(
-            child: ClipRRect(
-              borderRadius:BorderRadius.circular(Consts.avatarRadius) ,                    // BorderRadius.circular(50),
-              child: Image.asset("images/quizlogo2.png"),
-            ),
-            //  backgroundImage: AssetImage('images/quizlogo2.png'),
-            // backgroundColor: Colors.blueAccent,
-            radius: Consts.avatarRadius,
-          ),
-        ),*/
       ],
     );
   }
