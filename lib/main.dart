@@ -8,7 +8,7 @@ import 'package:device_info/device_info.dart';
 import 'package:trivia_fun/services/local_notification_service.dart';
 import 'dart:io';
 import 'package:trivia_fun/utils/sharedpreferences_helper.dart';
-import 'package:trivia_fun/screens/dashboard.dart';
+import 'package:trivia_fun/screens/dashboard/view/dashboard_view.dart';
 import 'package:trivia_fun/mywidgets/polkadots_canvas.dart';
 import 'package:trivia_fun/services/push_notification_service.dart';
 import 'package:firebase_core/firebase_core.dart';

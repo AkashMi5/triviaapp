@@ -9,12 +9,12 @@ import 'package:trivia_fun/screens/singleplayer_choose.dart';
 import 'package:trivia_fun/utils/sharedpreferences_helper.dart';
 import 'package:trivia_fun/screens/profile.dart';
 import 'package:progress_dialog/progress_dialog.dart';
-import 'package:trivia_fun/utils/sharedpreferences_helper.dart';
 import 'package:trivia_fun/models/quizquestion_model.dart';
 import 'package:trivia_fun/services/api_manager.dart';
 import 'package:trivia_fun/utils/database_helper.dart';
 import 'package:trivia_fun/screens/play_single_game.dart';
 import 'package:trivia_fun/mywidgets/custom_dialog2.dart';
+import 'package:trivia_fun/utils/strings.dart';
 
 class Dashboard extends StatefulWidget {
   @override
@@ -36,15 +36,6 @@ class _DashboardState extends State<Dashboard> {
   String _dialogTitle = 'Alert';
   String _dialogDesc = 'Not enough questions in this category, try other.';
   String _dialogButtonText = 'Okay';
-
-  String mssg =
-      "i) There are 2 modes to play the game: 1. Subject-wise 2. Random  \n \n"
-      "ii) You can check experience points and coins for subjects while choosing them before the start of the game \n \n \n"
-      "iii)	Random category will have 5 questions in each game and each question will have 10 seconds to answer. \n \n"
-      "iv) Each random game will have 50 experience points and each correct answer will fetch you 10 coins. \n \n "
-      "v)	If you exit the game in between you will not get any experience points or coins. \n \n"
-      "vi) Each completed game will add to your cumulative score and thus improve your global rank \n \n"
-      "vii) Cumulative score is arrived at by adding your coins and experience earned till now multiplied by your percentage of correct answers \n \n";
 
   @override
   void initState() {
@@ -164,7 +155,7 @@ class _DashboardState extends State<Dashboard> {
       context: context,
       builder: (BuildContext context) => CustomDialog2(
         title: 'Game Rules',
-        description: mssg,
+        description: Strings.guidelines,
       ),
     );
   }
