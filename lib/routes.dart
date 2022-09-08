@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:trivia_fun/screens/dashboard.dart';
+import 'package:trivia_fun/screens/dashboard/view/dashboard_view.dart';
 import 'package:trivia_fun/screens/login/view/login_view.dart';
 import 'package:trivia_fun/screens/splash/view/splash_view.dart';
 

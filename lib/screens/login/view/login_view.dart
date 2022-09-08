@@ -5,9 +5,7 @@ import 'package:trivia_fun/routes.dart';
 import 'package:trivia_fun/screens/login/bloc/login_bloc.dart';
 import 'package:trivia_fun/screens/login/bloc/login_event.dart';
 import 'package:trivia_fun/screens/login/bloc/login_state.dart';
-import 'package:trivia_fun/services/api_manager.dart';
 import 'package:trivia_fun/mywidgets/polkadots_canvas.dart';
-import 'package:trivia_fun/services/push_notification_service.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({Key key}) : super(key: key);
