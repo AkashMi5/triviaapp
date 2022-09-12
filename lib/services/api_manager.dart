@@ -8,7 +8,7 @@ import 'package:trivia_fun/models/category_detail.dart';
 import 'package:trivia_fun/models/quizquestion_model.dart';
 
 class API_Manager {
-  final String _baseUrl = "http://highflyapps.com/TriviaApp/triviacontroller/";
+  final String _baseUrl = "http://avenirtechs.com/TriviaApp/triviacontroller/";
 
   Future<dynamic> addUser(String username, String deviceid) async {
     //  var sendOtp_response ;

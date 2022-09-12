@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:trivia_fun/models/quizquestion_model.dart';
 import 'package:trivia_fun/screens/dashboard/bloc/dashboard_event.dart';
@@ -33,6 +34,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
           bool isConnected = false;
           await checkNetworkConnection().then((value) {
             isConnected = value;
+            debugPrint('testing');
           });
           if (isConnected) {
             emit(DashboardLoadingState());
@@ -43,6 +45,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
               emit(DashboardErrorState(response));
             }
           } else {
+            debugPrint('testing2');
             emit(DashboardErrorState('Internet not available'));
           }
         } catch (e) {
@@ -65,7 +68,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     String rGNum = await SharedpreferencesHelper.getRandomGames();
 
     return {
-      'uername': uname,
+      'username': uname,
       'coins': coins,
       'experiencePoints': exp,
       'percentage': perc,
