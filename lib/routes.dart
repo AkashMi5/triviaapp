@@ -15,27 +15,27 @@ mixin Routes {
   static Route<dynamic> generateRoute(RouteSettings routeSettings) {
     switch (routeSettings.name) {
       case splash:
-        return MaterialPageRoute(
+        return MaterialPageRoute<SplashView>(
             settings: const RouteSettings(name: splash),
             builder: (BuildContext buildContext) => SplashView());
         break;
       case login:
-        return MaterialPageRoute(
+        return MaterialPageRoute<LoginView>(
             settings: const RouteSettings(name: login),
             builder: (BuildContext buildContext) => LoginView());
         break;
       case dashboard:
-        return MaterialPageRoute(
-            settings: const RouteSettings(name: splash),
+        return MaterialPageRoute<Dashboard>(
+            settings: const RouteSettings(name: dashboard),
             builder: (BuildContext buildContext) => Dashboard());
         break;
       case playGame:
-        return MaterialPageRoute(
+        return MaterialPageRoute<PlaySingleGame>(
             settings: const RouteSettings(name: playGame),
             builder: (BuildContext context) => PlaySingleGame());
         break;
       case profile:
-        return MaterialPageRoute(
+        return MaterialPageRoute<Profile>(
             settings: const RouteSettings(name: profile),
             builder: (context) => Profile());
     }

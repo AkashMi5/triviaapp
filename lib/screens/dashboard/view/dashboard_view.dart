@@ -68,30 +68,30 @@ class _DashboardState extends State<Dashboard> {
     double cwidth = MediaQuery.of(context).size.width;
 
     return BlocProvider<DashboardBloc>(
-        create: (context) => _dashboardBloc,
+        create: (BuildContext context) => _dashboardBloc,
         child: BlocListener<DashboardBloc, DashboardState>(
             listener: (context, state) {
-          if (state is DashboardToCategoryScreenState) {
-            Navigator.of(context).pushNamed(Routes.playGame).then(
-                (value) => {_dashboardBloc..add(DashboardInitialEvent())});
-          } else if (state is DashboardToProfileScreenState) {
+          if (state.navigateToPlayGameScreen) {
             Navigator.of(context)
-                .pushNamed(Routes.profile)
-                .then((_) => {_dashboardBloc..add(DashboardInitialEvent())});
-          } else if (state is DashboardErrorState) {
-            debugPrint('testing3');
-            UtilityWidgets.showSnackBar(context, state.message);
+                .pushNamed(Routes.playGame)
+                .then((value) => _dashboardBloc.add(DashboardInitialEvent()));
+          }
+          if (state.navigateToProfileScreen) {
+            Navigator.of(context).pushNamed(Routes.profile);
+          }
+          if (state.errorMessage != null && state.errorMessage != '') {
+            UtilityWidgets.showSnackBar(context, state.errorMessage);
+            _dashboardBloc.add(DashboardErrorClearEvent());
           }
         }, child: BlocBuilder<DashboardBloc, DashboardState>(
-                builder: (context, state) {
-          if (state is DashboardInitialState ||
-              state is DashboardLoadingState) {
+                builder: (BuildContext context, DashboardState state) {
+          if (state.isLoading) {
             return Center(
               child: CircularProgressIndicator(
                 color: Colors.yellowAccent,
               ),
             );
-          } else if (state is DashboardLoadedState) {
+          } else {
             return SafeArea(
               child: Scaffold(
                 body: Stack(
@@ -620,11 +620,6 @@ class _DashboardState extends State<Dashboard> {
                   ],
                 ),
               ),
-            );
-          } else {
-            return Container(
-              color: Colors.white,
-              child: Center(child: Text("Some error occured")),
             );
           }
         })));

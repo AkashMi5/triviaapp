@@ -12,12 +12,17 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   final API_Manager _apiM = API_Manager();
   final DatabaseHelper database = DatabaseHelper.db;
 
-  DashboardBloc() : super(DashboardInitialState()) {
+  DashboardBloc() : super(DashboardState.initital()) {
     on<DashboardEvent>((event, emit) async {
       if (event is DashboardInitialEvent) {
         try {
           Map<String, String> userData = await getUserData();
-          emit(DashboardLoadedState(
+
+          emit(state.copyWith(
+              isLoading: false,
+              navigateToPlayGameScreen: false,
+              navigateToProfileScreen: false,
+              errorMessage: '',
               username: userData['username'],
               coins: userData['coins'],
               experiencePoints: userData['experiencePoints'],
@@ -25,36 +30,51 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
               subjectWiseGames: userData['subjectWiseGames'],
               randomGames: userData['randomGames']));
         } catch (e) {
-          emit(DashboardErrorState(e.toString()));
+          emit(state.copyWith(errorMessage: e.toString()));
         }
       } else if (event is DashboardLoadingEvent) {
-        emit(DashboardLoadingState());
+        emit(state.copyWith(isLoading: true));
       } else if (event is DashboardToCategoryScreenEvent) {
         try {
           bool isConnected = false;
           await checkNetworkConnection().then((value) {
             isConnected = value;
-            debugPrint('testing');
           });
           if (isConnected) {
-            emit(DashboardLoadingState());
+            emit(state.copyWith(
+                isLoading: true,
+                navigateToProfileScreen: false,
+                navigateToPlayGameScreen: false));
             var response = await getQuestions();
             if (response) {
-              emit(DashboardToCategoryScreenState());
+              emit(state.copyWith(
+                navigateToPlayGameScreen: true,
+              ));
             } else {
-              emit(DashboardErrorState(response));
+              emit(state.copyWith(errorMessage: response.toString()));
             }
           } else {
-            debugPrint('testing2');
-            emit(DashboardErrorState('Internet not available'));
+            emit(state.copyWith(errorMessage: 'Internet not available'));
           }
         } catch (e) {
-          emit(DashboardErrorState(e.toString()));
+          emit(state.copyWith(errorMessage: e.toString()));
         }
       } else if (event is DashboardToProfileScreenEvent) {
-        emit(DashboardToProfileScreenState());
+        bool isConnected = false;
+        await checkNetworkConnection().then((value) {
+          isConnected = value;
+        });
+        if (isConnected) {
+          emit(state.copyWith(
+              navigateToProfileScreen: true, navigateToPlayGameScreen: false));
+        } else {
+          emit(state.copyWith(errorMessage: 'Internet not available'));
+        }
+      } else if (event is DashboardErrorClearEvent) {
+        emit(state.copyWith(errorMessage: ''));
       } else {
-        emit(DashboardErrorState('Something went wrong!'));
+        emit(state.copyWith(
+            isLoading: false, errorMessage: 'Something went wrong!'));
       }
     });
   }
