@@ -207,9 +207,8 @@ class _LoginViewState extends State<LoginView> {
                                   padding: EdgeInsets.fromLTRB(
                                       20.0, 15.0, 20.0, 15.0),
                                   onPressed: () {
-                                    _loginBloc
-                                      ..add(UserNameSubmitEvent(
-                                          userName: _usernameController.text));
+                                    _loginBloc.add(UserNameSubmitEvent(
+                                        userName: _usernameController.text));
                                   },
                                   child: Text("You're welcome",
                                       textAlign: TextAlign.center,

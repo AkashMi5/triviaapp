@@ -43,9 +43,10 @@ class _SplashViewState extends State<SplashView> {
               listener: (context, state) {
                 if (state is SplashNavigateToOtherScreenState) {
                   if (state.isUserLoggedin) {
-                    Navigator.of(context).pushNamed(Routes.dashboard);
+                    Navigator.of(context)
+                        .pushReplacementNamed(Routes.dashboard);
                   } else {
-                    Navigator.of(context).pushNamed(Routes.login);
+                    Navigator.of(context).pushReplacementNamed(Routes.login);
                   }
                 } else if (state is SplashErrorState) {
                   UtilityWidgets.showSnackBar(context, state.errorMessage);

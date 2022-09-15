@@ -30,8 +30,8 @@ class DashboardToProfileScreenEvent extends DashboardEvent {
   List<Object> get props => [];
 }
 
-class DashboardErrorEvent extends DashboardEvent {
-  DashboardErrorEvent();
+class DashboardErrorClearEvent extends DashboardEvent {
+  DashboardErrorClearEvent();
 
   @override
   List<Object> get props => [];

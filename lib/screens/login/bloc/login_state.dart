@@ -27,6 +27,7 @@ class LoginDataSubmittedState extends LoginState {
   final String message;
   final UserLogin userLogin;
 
+  @override
   List<Object> get props => [message, userLogin];
 }
 
