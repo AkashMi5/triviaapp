@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' ;
+import 'package:flutter/material.dart';
 
 class ApiException implements Exception {
   final _message;
@@ -8,7 +8,7 @@ class ApiException implements Exception {
 
   String toString() {
     //  return "$_prefix$_message";
-    return _prefix ;
+    return _prefix;
   }
 }
 
@@ -22,7 +22,8 @@ class BadRequestException extends ApiException {
 }
 
 class UnauthorisedException extends ApiException {
-  UnauthorisedException([String message]) : super(message, "Unauthorised exception");
+  UnauthorisedException([String message])
+      : super(message, "Unauthorised exception");
 }
 
 class InvalidInputException extends ApiException {
