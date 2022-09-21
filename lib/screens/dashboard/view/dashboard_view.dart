@@ -117,10 +117,16 @@ class _DashboardState extends State<Dashboard> {
                           Center(
                             child: Stack(
                               children: <Widget>[
-                                Image.asset(
-                                  'user_avatar2.png',
-                                  height: cheight * 0.06,
-                                  width: cheight * .06,
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.of(context)
+                                        .pushNamed(Routes.timer);
+                                  },
+                                  child: Image.asset(
+                                    'user_avatar2.png',
+                                    height: cheight * 0.06,
+                                    width: cheight * .06,
+                                  ),
                                 ),
                                 /*Positioned(
                             right: -1,
