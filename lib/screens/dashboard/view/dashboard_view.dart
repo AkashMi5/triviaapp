@@ -15,6 +15,8 @@ import 'package:trivia_fun/screens/profile.dart';
 import 'package:trivia_fun/screens/play_single_game.dart';
 import 'package:trivia_fun/mywidgets/custom_dialog2.dart';
 import 'package:trivia_fun/utils/strings.dart';
+import 'dart:async';
+import 'package:flutter/services.dart';
 
 class Dashboard extends StatefulWidget {
   @override
@@ -60,6 +62,23 @@ class _DashboardState extends State<Dashboard> {
         description: Strings.guidelines,
       ),
     );
+  }
+
+  static const platform = const MethodChannel('ourproject.sendstring');
+  String receivedString = "";
+
+  Future<void> callNativeFunction() async {
+    String msg = "Hello from Flutter", data = "";
+    try {
+      final String temp =
+          await platform.invokeMethod('callSendStringFun', {"arg": msg});
+      data = temp;
+    } on PlatformException catch (e) {
+      data = "Failed";
+    }
+    setState(() {
+      receivedString = data;
+    });
   }
 
   @override
@@ -119,8 +138,15 @@ class _DashboardState extends State<Dashboard> {
                               children: <Widget>[
                                 GestureDetector(
                                   onTap: () {
-                                    Navigator.of(context)
-                                        .pushNamed(Routes.timer);
+                                    /*
+                                    Demonstrate to use timer with bloc
+                                    */
+                                    // Navigator.of(context)
+                                    //     .pushNamed(Routes.timer);
+                                    /*
+                                    Demonstrate method channel function
+                                    */
+                                    callNativeFunction();
                                   },
                                   child: Image.asset(
                                     'user_avatar2.png',
@@ -128,17 +154,13 @@ class _DashboardState extends State<Dashboard> {
                                     width: cheight * .06,
                                   ),
                                 ),
-                                /*Positioned(
-                            right: -1,
-                              bottom: 1,
-                              child: Icon(Icons.edit, color: Colors.white,)
-                          )*/
                               ],
                             ),
                           ),
                           SizedBox(height: 8),
                           Text(
                             state.username ?? '',
+                            // receivedString, // used for demo of method channel
                             style: TextStyle(
                                 fontSize: cheight * 0.025,
                                 color: Colors.white,
