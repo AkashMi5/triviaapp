@@ -130,7 +130,7 @@ class _GridCategoryCellState extends State<GridCategoryCell> {
                               padding: const EdgeInsets.fromLTRB(
                                   8.0, 10.0, 8.0, 8.0),
                               child: Image.network(
-                                'http://highflyapps.com/quizrn/assets/category_icons/' +
+                                'http://avenirtechs.com/quizrn/assets/category_icons/' +
                                     widget.categoryDetail.categoryImage,
                                 color: Colors.white,
                                 height: cheight * 0.06,

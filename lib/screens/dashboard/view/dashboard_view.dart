@@ -147,6 +147,11 @@ class _DashboardState extends State<Dashboard> {
                                     Demonstrate method channel function
                                     */
                                     callNativeFunction();
+                                    /*
+                                    Test how Scaffold.of(context) works in snackbar
+                                    I will move to next screen without scaffold using navigator 
+                                    and then use Scaffold.of(context)
+                                    */
                                   },
                                   child: Image.asset(
                                     'user_avatar2.png',
@@ -273,7 +278,6 @@ class _DashboardState extends State<Dashboard> {
                       child: Center(
                         child: InkWell(
                           onTap: () {
-                            print("Tap clicked");
                             _dashboardBloc.add(DashboardToProfileScreenEvent());
                           },
                           child: Image.asset(

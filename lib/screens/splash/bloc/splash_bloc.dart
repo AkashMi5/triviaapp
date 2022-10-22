@@ -45,7 +45,7 @@ class SplashBloc extends Bloc<SplashEvent, SplashState> {
         deviceName = build.model;
         deviceVersion = build.version.toString();
         identifier = build.androidId; //UUID for Android
-        SharedpreferencesHelper.setDeviceId(identifier);
+        await SharedpreferencesHelper.setDeviceId(identifier);
       } else if (Platform.isIOS) {
         // todo
       }
